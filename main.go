@@ -42,7 +42,7 @@ func PostLinkHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(j)
 }
 
-func GetLinkHandler(w http.ResponseWriter, r *http.Request) {
+func GetLinksHandler(w http.ResponseWriter, r *http.Request) {
 	var links []Link
 	for _, v := range linkStore {
 		links = append(links, v)
@@ -54,6 +54,28 @@ func GetLinkHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write(j)
+}
+
+func GetALinkHandler(w http.ResponseWriter, r *http.Request) {
+
+	vars := mux.Vars(r)
+	k := vars["id"]
+
+	if link, ok := linkStore[k]; ok {
+		j, err := json.Marshal(link)
+		if err != nil {
+			panic(err)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(j)
+
+	} else {
+
+		log.Printf("Could not find key of Link %s to show", k)
+		w.WriteHeader(http.StatusNoContent)
+	}
+
 }
 
 func PutLinkHandler(w http.ResponseWriter, r *http.Request) {
@@ -90,8 +112,9 @@ func DeleteLinkHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	r := mux.NewRouter().StrictSlash(false)
-	r.HandleFunc("/api/links", GetLinkHandler).Methods("GET")
+	r.HandleFunc("/api/links", GetLinksHandler).Methods("GET")
 	r.HandleFunc("/api/links", PostLinkHandler).Methods("POST")
+	r.HandleFunc("/api/links/{id}", GetALinkHandler).Methods("GET")
 	r.HandleFunc("/api/links/{id}", PutLinkHandler).Methods("PUT")
 	r.HandleFunc("/api/links/{id}", DeleteLinkHandler).Methods("DELETE")
 
